@@ -1,0 +1,41 @@
+# --- Privacy & Environment Variables ---
+.env
+.env.*
+*.key
+auth.json
+
+# --- Python Basics ---
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.python-version
+
+# --- Virtual Environments ---
+.venv/
+
+# --- Tool Caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- IDE & System Files ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- AI Collaboration & Project Management (Local Only) ---
+CLAUDE.md
+GEMINI.md
+dev-prompt.md
+PM-prompt.md
+REVIEW.md
+implementation_plan.md
+TASKS.md
+changelog-generator-prd.md
+.claude/
