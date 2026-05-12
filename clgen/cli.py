@@ -7,6 +7,10 @@ from enum import StrEnum
 import typer
 from rich.console import Console
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from clgen import __version__
 from clgen.analyzer import analyze_commits
 from clgen.generator import generate_changelog

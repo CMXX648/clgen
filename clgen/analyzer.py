@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 
 import litellm
@@ -10,6 +11,31 @@ import litellm
 from clgen.git import Commit
 
 CATEGORIES = ("feature", "fix", "breaking", "perf", "security", "deprecation")
+
+_MODEL_API_KEY_MAP = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "deepseek": "DEEPSEEK_API_KEY",
+}
+
+
+def validate_api_key(model: str) -> None:
+    """Validate that the required API key is set for the given model.
+
+    Args:
+        model: LiteLLM model string (e.g. "anthropic/claude-sonnet-4-20250514").
+
+    Raises:
+        ValueError: If the required API key environment variable is not set.
+    """
+    provider = model.split("/")[0]
+    env_var = _MODEL_API_KEY_MAP.get(provider)
+    if env_var and not os.environ.get(env_var):
+        raise ValueError(
+            f"API key not found. Please set the {env_var} environment variable.\n"
+            f"You can add it to a .env file in your project root:\n"
+            f"  {env_var}=your-api-key-here"
+        )
 
 _SYSTEM_PROMPT = """\
 You are a changelog analyst. Given a list of git commits,
@@ -95,6 +121,8 @@ def analyze_commits(
     """
     if not commits:
         return []
+
+    validate_api_key(model)
 
     user_prompt = _build_user_prompt(commits)
 

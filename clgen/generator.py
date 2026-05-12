@@ -1,12 +1,12 @@
 """Multi-audience changelog content generation."""
 
 from __future__ import annotations
-
 from dataclasses import dataclass
-
 import litellm
+from clgen.analyzer import AnalyzedChange, validate_api_key
 
-from clgen.analyzer import AnalyzedChange
+### USER_PROMPT
+### 生成给非专业技术人员的内容
 
 _USER_PROMPT = """\
 Generate a user-facing changelog for version {version}.
@@ -22,6 +22,9 @@ Changes:
 Return ONLY the Markdown text, no explanation.
 """
 
+### DEVELOPER_PROMPT
+### 生成给专业技术人员的内容
+
 _DEVELOPER_PROMPT = """\
 Generate a developer-facing changelog for version {version}.
 
@@ -35,6 +38,9 @@ Changes:
 
 Return ONLY the Markdown text, no explanation.
 """
+
+### SUMMARY_PROMPT
+### 生成总结类型的内容
 
 _SUMMARY_PROMPT = """\
 Generate a 2-4 sentence release summary for version {version}.
@@ -60,6 +66,7 @@ class GeneratedChangelog:
     summary_version: str
 
 
+# 格式化改变内容
 def _format_changes(changes: list[AnalyzedChange]) -> str:
     """Format AnalyzedChange list into a readable string for prompts."""
     lines = []
@@ -112,6 +119,8 @@ def generate_changelog(
             developer_version="No changes in this release.",
             summary_version="No changes in this release.",
         )
+
+    validate_api_key(model)
 
     changes_text = _format_changes(changes)
     today = date.today().isoformat()

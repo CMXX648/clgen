@@ -103,7 +103,7 @@ clgen generate --model deepseek/deepseek-chat
 
 ```bash
 # Clone and install
-git clone https://github.com/yourname/clgen.git
+git clone https://github.com/cmxx648/clgen.git
 cd clgen
 uv sync
 

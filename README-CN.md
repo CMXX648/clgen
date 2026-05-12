@@ -48,7 +48,7 @@ feat!: rename send() to request()
 Merge branch 'dev' into main
 ```
 
-**生成的 changelog：**
+**clgen生成的 changelog：**
 
 ```markdown
 # [1.0.0] - 2026-05-12
@@ -104,7 +104,7 @@ clgen generate --model deepseek/deepseek-chat
 
 ```bash
 # 克隆并安装
-git clone https://github.com/yourname/clgen.git
+git clone https://github.com/cmxx648/clgen.git
 cd clgen
 uv sync
 

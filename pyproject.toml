@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 authors = [
-    { name = "clgen contributors" },
+    { name = "KriseZhu" },
 ]
 keywords = ["changelog", "ai", "git", "release-notes", "cli"]
 classifiers = [
@@ -24,6 +24,7 @@ dependencies = [
     "gitpython>=3.1.0",
     "rich>=13.0.0",
     "litellm>=1.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
