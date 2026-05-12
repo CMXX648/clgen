@@ -21,19 +21,19 @@ pip install clgen
 
 ```bash
 # 从上一个 tag 到 HEAD 生成 changelog（所有受众）
-clgen generate
+clgen
 
 # 预览模式：仅输出到终端，不写入文件
-clgen generate --dry-run
+clgen --dry-run
 
 # 仅生成面向用户的版本，写入文件
-clgen generate --audience user --output RELEASE.md
+clgen --audience user --output RELEASE.md
 
 # 追加到已有 CHANGELOG.md（保留历史内容）
-clgen generate --append
+clgen --append
 
 # 指定版本区间
-clgen generate v1.0.0..HEAD
+clgen v1.0.0..HEAD
 ```
 
 ## 效果对比
@@ -67,7 +67,7 @@ Merge branch 'dev' into main
 ## CLI 参考
 
 ```
-clgen generate [OPTIONS] [REVISION_RANGE]
+clgen [OPTIONS] [REVISION_RANGE]
 ```
 
 | 参数 | 说明 | 默认值 |
@@ -77,27 +77,54 @@ clgen generate [OPTIONS] [REVISION_RANGE]
 | `--output`, `-o` | 输出到指定文件 | 标准输出 |
 | `--append` | 插入到 `CHANGELOG.md` 顶部，保留已有内容 | 关闭 |
 | `--dry-run` | 仅输出到标准输出，不写文件 | 关闭 |
-| `--model`, `-m` | LiteLLM 模型字符串 | `anthropic/claude-sonnet-4-20250514` |
+| `--model`, `-m` | LiteLLM 模型字符串 | 根据 API Key 自动检测 |
 | `--version`, `-v` | 打印版本号并退出 | |
 
 ## 多模型支持
 
-clgen 使用 [litellm](https://github.com/BerriAI/litellm) 调用 LLM。根据你使用的 provider 设置对应的 API Key：
+clgen 使用 [litellm](https://github.com/BerriAI/litellm) 调用 LLM。支持 Anthropic、OpenAI、DeepSeek 或其他 litellm 兼容的 provider。
+
+### 自动检测
+
+未指定 `--model` 时，clgen 会自动扫描环境变量，根据已配置的 API Key 选择对应模型：
+
+| 已设置的 API Key | 自动选择的模型 |
+|------------------|---------------|
+| `ANTHROPIC_API_KEY` | `anthropic/claude-sonnet-4-20250514` |
+| `OPENAI_API_KEY` | `openai/gpt-4o` |
+| `DEEPSEEK_API_KEY` | `deepseek/deepseek-chat` |
+
+优先级顺序：Anthropic > OpenAI > DeepSeek。
+
+### 自定义模型
+
+使用 `--model` 覆盖自动检测结果，或指定特定模型：
 
 ```bash
-# Anthropic（默认）
+# 使用 OpenAI
+export OPENAI_API_KEY=sk-...
+clgen --model openai/gpt-4o
+
+# 使用 DeepSeek
+export DEEPSEEK_API_KEY=...
+clgen --model deepseek/deepseek-chat
+
+# 使用任意 litellm 支持的模型
+clgen --model anthropic/claude-sonnet-4-20250514
+clgen --model openai/gpt-4o-mini
+clgen --model deepseek/deepseek-coder
+```
+
+### API Key 配置
+
+可以通过环境变量或项目根目录的 `.env` 文件设置 API Key：
+
+```bash
+# 方式一：环境变量
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# OpenAI
-export OPENAI_API_KEY=sk-...
-
-# DeepSeek
-export DEEPSEEK_API_KEY=...
-
-# 然后使用 --model 参数
-clgen generate --model openai/gpt-4o
-clgen generate --model anthropic/claude-sonnet-4-20250514
-clgen generate --model deepseek/deepseek-chat
+# 方式二：.env 文件（在项目根目录创建）
+echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
 ```
 
 ## 开发

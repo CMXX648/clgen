@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from clgen import __version__
-from clgen.analyzer import analyze_commits
+from clgen.analyzer import analyze_commits, detect_model
 from clgen.generator import generate_changelog
 from clgen.git import filter_commits, get_commits
 from clgen.renderer import append_to_changelog, render_to_file, render_to_stdout
@@ -36,7 +36,7 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main(
     version: bool = typer.Option(
         False,
@@ -46,12 +46,6 @@ def main(
         callback=_version_callback,
         is_eager=True,
     ),
-) -> None:
-    """clgen - AI-powered changelog generator from git history."""
-
-
-@app.command()
-def generate(
     revision_range: str | None = typer.Argument(
         None,
         help=(
@@ -81,18 +75,22 @@ def generate(
         "--dry-run",
         help="Print to stdout only, do not write any files.",
     ),
-    model: str = typer.Option(
-        "anthropic/claude-sonnet-4-20250514",
+    model: str | None = typer.Option(
+        None,
         "--model",
         "-m",
-        help="LLM model to use for analysis and generation.",
+        help="LLM model to use for analysis and generation. Auto-detected from API keys if omitted.",
     ),
 ) -> None:
-    """Generate a changelog from git history using AI.
+    """clgen - AI-powered changelog generator from git history."""
+    # Auto-detect model from available API keys
+    if model is None:
+        try:
+            model = detect_model()
+        except ValueError as e:
+            console.print(f"[bold red]Error:[/] {e}")
+            raise typer.Exit(code=2)
 
-    Reads commits, classifies changes with AI, and generates audience-specific
-    changelog content in Markdown.
-    """
     # Step 1: Read git log
     with console.status("[bold blue]Reading git log..."):
         try:

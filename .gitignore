@@ -1,6 +1,5 @@
 # --- Privacy & Environment Variables ---
 .env
-.env.*
 *.key
 auth.json
 

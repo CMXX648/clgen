@@ -20,19 +20,19 @@ pip install clgen
 
 ```bash
 # Generate changelog from last tag to HEAD (all audiences)
-clgen generate
+clgen
 
 # Dry-run: print to terminal only, no files written
-clgen generate --dry-run
+clgen --dry-run
 
 # User-facing changelog only, written to a file
-clgen generate --audience user --output RELEASE.md
+clgen --audience user --output RELEASE.md
 
 # Append to existing CHANGELOG.md (preserves history)
-clgen generate --append
+clgen --append
 
 # Specific version range
-clgen generate v1.0.0..HEAD
+clgen v1.0.0..HEAD
 ```
 
 ## Before / After
@@ -66,7 +66,7 @@ Merge branch 'dev' into main
 ## CLI Reference
 
 ```
-clgen generate [OPTIONS] [REVISION_RANGE]
+clgen [OPTIONS] [REVISION_RANGE]
 ```
 
 | Flag | Description | Default |
@@ -76,27 +76,54 @@ clgen generate [OPTIONS] [REVISION_RANGE]
 | `--output`, `-o` | Write output to a file | stdout |
 | `--append` | Prepend to `CHANGELOG.md`, preserving existing content | off |
 | `--dry-run` | Print to stdout only, no file writes | off |
-| `--model`, `-m` | LiteLLM model string | `anthropic/claude-sonnet-4-20250514` |
+| `--model`, `-m` | LiteLLM model string | Auto-detect from API keys |
 | `--version`, `-v` | Print version and exit | |
 
 ## Multi-Model Support
 
-clgen uses [litellm](https://github.com/BerriAI/litellm) for LLM calls. Set the appropriate API key for your provider:
+clgen uses [litellm](https://github.com/BerriAI/litellm) for LLM calls. You can use Anthropic, OpenAI, DeepSeek, or any other litellm-supported provider.
+
+### Auto-Detection
+
+When `--model` is not specified, clgen automatically scans your environment variables and selects a model based on the first available API key:
+
+| API Key Set | Auto-Selected Model |
+|-------------|---------------------|
+| `ANTHROPIC_API_KEY` | `anthropic/claude-sonnet-4-20250514` |
+| `OPENAI_API_KEY` | `openai/gpt-4o` |
+| `DEEPSEEK_API_KEY` | `deepseek/deepseek-chat` |
+
+Priority order: Anthropic > OpenAI > DeepSeek.
+
+### Custom Model
+
+Use `--model` to override the auto-detected model or choose a specific one:
 
 ```bash
-# Anthropic (default)
+# Use OpenAI
+export OPENAI_API_KEY=sk-...
+clgen --model openai/gpt-4o
+
+# Use DeepSeek
+export DEEPSEEK_API_KEY=...
+clgen --model deepseek/deepseek-chat
+
+# Use any litellm-supported model
+clgen --model anthropic/claude-sonnet-4-20250514
+clgen --model openai/gpt-4o-mini
+clgen --model deepseek/deepseek-coder
+```
+
+### API Key Configuration
+
+You can set API keys via environment variables or a `.env` file in your project root:
+
+```bash
+# Option 1: Environment variable
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# OpenAI
-export OPENAI_API_KEY=sk-...
-
-# DeepSeek
-export DEEPSEEK_API_KEY=...
-
-# Then use the --model flag
-clgen generate --model openai/gpt-4o
-clgen generate --model anthropic/claude-sonnet-4-20250514
-clgen generate --model deepseek/deepseek-chat
+# Option 2: .env file (create in project root)
+echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
 ```
 
 ## Development

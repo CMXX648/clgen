@@ -18,6 +18,39 @@ _MODEL_API_KEY_MAP = {
     "deepseek": "DEEPSEEK_API_KEY",
 }
 
+_DEFAULT_MODELS = {
+    "anthropic": "anthropic/claude-sonnet-4-20250514",
+    "openai": "openai/gpt-4o",
+    "deepseek": "deepseek/deepseek-v4-flash",
+}
+
+_PROVIDER_PRIORITY = ["anthropic", "openai", "deepseek"]
+
+
+def detect_model() -> str:
+    """Detect the best available model based on set API keys.
+
+    Scans environment variables and returns the default model for the
+    first provider with a configured API key.
+
+    Returns:
+        Model string (e.g. "anthropic/claude-sonnet-4-20250514").
+
+    Raises:
+        ValueError: If no API keys are found.
+    """
+    for provider in _PROVIDER_PRIORITY:
+        env_var = _MODEL_API_KEY_MAP[provider]
+        if os.environ.get(env_var):
+            return _DEFAULT_MODELS[provider]
+
+    configured = ", ".join(f"{v}=..." for v in _MODEL_API_KEY_MAP.values())
+    raise ValueError(
+        "No API keys found. Please set at least one of the following "
+        f"environment variables:\n  {configured}\n\n"
+        "You can add them to a .env file in your project root."
+    )
+
 
 def validate_api_key(model: str) -> None:
     """Validate that the required API key is set for the given model.
@@ -38,7 +71,7 @@ def validate_api_key(model: str) -> None:
         )
 
 _SYSTEM_PROMPT = """\
-You are a changelog analyst. Given a list of git commits,
+You are a factual changelog analyst. Given a list of git commits,
 classify each into exactly one category:
 - feature: new functionality
 - fix: bug fix
@@ -47,20 +80,14 @@ classify each into exactly one category:
 - security: security fix
 - deprecation: something being removed or replaced
 
-Also identify if a change is a breaking change. Breaking changes include:
-- Function/method renames
-- Parameter changes (added required, removed optional)
-- API removals
-- Return value type changes
-Even if the commit message does not contain "!" or "BREAKING CHANGE:".
-
-For breaking changes, provide a migration_hint with specific, actionable steps.
-
-Group related commits that describe the same change into one entry.
+### STRICT RULES:
+1. **NO HALLUCINATION**: Do not invent function names, API signatures, filenames, or environment variables that are not explicitly mentioned in the commit messages.
+2. **STICK TO FACTS**: If a commit message is vague (e.g., "add auth"), summarize the intent (e.g., "Implement authentication") without guessing the code implementation.
+3. **MIGRATION HINTS**: Only provide a migration_hint if you can infer the specific change from the commit messages. If a breaking change is detected but the solution isn't clear, provide a general but safe warning.
 
 Return a JSON array. Each element must have:
 - "category": one of the categories above
-- "title": concise summary (rewritten by you, not the raw commit message)
+- "title": concise, factual summary
 - "is_breaking": boolean
 - "migration_hint": string or null
 - "source_commits": array of commit short_messages that were grouped
