@@ -1,5 +1,7 @@
 # clgen
 
+> **[English](README.md)** | **[中文](README-CN.md)**
+
 AI-powered changelog generator from git history.
 
 Reads your git log, uses AI to understand changes semantically, and generates audience-specific changelogs (user-facing, developer, or summary) in Markdown.
