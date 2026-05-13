@@ -1,46 +1,20 @@
 # clgen
 
-> **[English](README.md)** | **[中文](README-CN.md)**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
+**基于 AI 的 Git 提交历史更新日志生成器。**
 
-基于 AI 的 Git 提交记录 changelog 生成器。
+别再花半小时手动整理发版说明了。`clgen` 能读懂你的 Git 日志，利用大模型（LLM）理解变更的语义，并在几秒钟内生成专业的、面向不同受众的更新日志。
 
-读取你的 git log，通过 AI 语义理解变更，自动生成面向不同受众（用户 / 开发者 / 摘要）的 Markdown changelog。
+[English](README.md) | [简体中文](README-CN.md)
 
-## 安装
+---
 
-```bash
-# 使用 uv（推荐）
-uv tool install clgen
+## ✨ 见证奇迹
 
-# 使用 pip
-pip install clgen
-```
-
-## 快速开始
-
-```bash
-# 从上一个 tag 到 HEAD 生成 changelog（所有受众）
-clgen
-
-# 预览模式：仅输出到终端，不写入文件
-clgen --dry-run
-
-# 仅生成面向用户的版本，写入文件
-clgen --audience user --output RELEASE.md
-
-# 追加到已有 CHANGELOG.md（保留历史内容）
-clgen --append
-
-# 指定版本区间
-clgen v1.0.0..HEAD
-```
-
-## 效果对比
-
-**原始 git log：**
-
-```
+**Before**（原始、杂乱的 Git 日志）:
+```text
 feat: add user authentication
 fix: resolve login timeout (#12)
 chore: update dependencies
@@ -48,101 +22,109 @@ feat!: rename send() to request()
 Merge branch 'dev' into main
 ```
 
-**clgen生成的 changelog：**
+**After**（由 `clgen` 自动生成）:
 
-```markdown
-# [1.0.0] - 2026-05-12
+#### 👤 用户版本 (User-Facing)
+- **新功能**: 增加了安全的身份验证系统。
+- **Bug 修复**: 解决了登录请求偶尔超时的问题。
 
-## 新功能
+#### 💻 开发者版本 (Developer-Facing)
+- **破坏性变更**: `send()` 已重命名为 `request()`。
+  - *迁移指南*: 请将所有调用 `send()` 的地方替换为 `request()`。
+- **功能实现**: 实现了 `auth` 模块逻辑。
 
-- 新增用户认证系统
-- 修复登录超时问题
+---
 
-## 破坏性变更
+## 🚀 核心特性
 
-- `send()` 已重命名为 `request()`
-  - 迁移指南：将所有 `send()` 调用替换为 `request()`
-```
+- **语义化理解**: 利用 LLM（OpenAI, Anthropic, DeepSeek 等）自动区分功能、修复和破坏性变更——即使你没写 Conventional Commits。
+- **多受众输出**: 同时生成三个版本：
+  - **用户版**: 通俗易懂，强调价值。
+  - **开发者版**: 技术细节丰富，包含 API 变更和迁移提示。
+  - **摘要版**: 适合社交媒体或公告的 2 句话简介。
+- **零配置**: 自动检测最后一个 Tag，开箱即用。
+- **安全第一**: 支持 `--dry-run` 预览，防止误写文件。
 
-## CLI 参考
+---
 
-```
-clgen [OPTIONS] [REVISION_RANGE]
-```
+## 💻 操作系统支持
 
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `REVISION_RANGE` | Git 范围（如 `v1.0.0..HEAD`、`HEAD~10`） | 自动检测上一个 tag |
-| `--audience`, `-a` | `user`、`developer`、`summary` 或 `all` | `all` |
-| `--output`, `-o` | 输出到指定文件 | 标准输出 |
-| `--append` | 插入到 `CHANGELOG.md` 顶部，保留已有内容 | 关闭 |
-| `--dry-run` | 仅输出到标准输出，不写文件 | 关闭 |
-| `--model`, `-m` | LiteLLM 模型字符串 | 根据 API Key 自动检测 |
-| `--version`, `-v` | 打印版本号并退出 | |
+目前，`clgen` 已正式测试并支持以下系统：
+- ✅ **Windows**
+- ✅ **Linux**
+- ⏳ **macOS** (暂未正式验证/支持中)
 
-## 多模型支持
+---
 
-clgen 使用 [litellm](https://github.com/BerriAI/litellm) 调用 LLM。支持 Anthropic、OpenAI、DeepSeek 或其他 litellm 兼容的 provider。
-
-### 自动检测
-
-未指定 `--model` 时，clgen 会自动扫描环境变量，根据已配置的 API Key 选择对应模型：
-
-| 已设置的 API Key | 自动选择的模型 |
-|------------------|---------------|
-| `ANTHROPIC_API_KEY` | `anthropic/claude-sonnet-4-20250514` |
-| `OPENAI_API_KEY` | `openai/gpt-4o` |
-| `DEEPSEEK_API_KEY` | `deepseek/deepseek-chat` |
-
-优先级顺序：Anthropic > OpenAI > DeepSeek。
-
-### 自定义模型
-
-使用 `--model` 覆盖自动检测结果，或指定特定模型：
+## 🛠 安装
 
 ```bash
-# 使用 OpenAI
-export OPENAI_API_KEY=sk-...
-clgen --model openai/gpt-4o
+# 推荐方式 (使用 uv)
+uv tool install clgen
 
-# 使用 DeepSeek
-export DEEPSEEK_API_KEY=...
-clgen --model deepseek/deepseek-chat
-
-# 使用任意 litellm 支持的模型
-clgen --model anthropic/claude-sonnet-4-20250514
-clgen --model openai/gpt-4o-mini
-clgen --model deepseek/deepseek-coder
+# 使用 pip
+pip install clgen
 ```
 
-### API Key 配置
+---
 
-可以通过环境变量或项目根目录的 `.env` 文件设置 API Key：
+## 📖 快速上手
+
+确保你已设置 API Key（例如 `DEEPSEEK_API_KEY`, `OPENAI_API_KEY` 或 `ANTHROPIC_API_KEY`）。
 
 ```bash
-# 方式一：环境变量
-export ANTHROPIC_API_KEY=sk-ant-...
+# 为所有受众生成日志 (仅输出到终端)
+clgen --dry-run
 
-# 方式二：.env 文件（在项目根目录创建）
-echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
+# 追加到 CHANGELOG.md (自动检测范围)
+clgen --append
+
+# 指定版本区间
+clgen v1.0.0..HEAD
+
+# 指定模型
+clgen --model deepseek/deepseek-v4-flash
 ```
 
-## 开发
+---
 
-```bash
-# 克隆并安装
-git clone https://github.com/cmxx648/clgen.git
-cd clgen
-uv sync
+## ⚙️ 配置与模型
 
-# 运行测试
-uv run pytest
+`clgen` 使用 [litellm](https://github.com/BerriAI/litellm) 以支持全球各种模型。
 
-# 代码检查
-uv run ruff check .
-uv run ruff format .
-```
+### 1. API Key 与环境变量
 
-## 许可证
+| 厂商 | 环境变量 | 模型参数示例 |
+|----------|----------------------|--------------------|
+| **DeepSeek (深度求索)** | `DEEPSEEK_API_KEY` | `--model deepseek/deepseek-v4-flash` |
+| **OpenAI** | `OPENAI_API_KEY` | `--model openai/gpt-4o` |
+| **Anthropic** | `ANTHROPIC_API_KEY` | `--model anthropic/claude-sonnet-4-20250514` |
+
+### 2. 配置策略
+
+你可以通过多种方式配置 API Key：
+
+- **Windows 系统环境变量**: 你可以通过 *系统属性 > 环境变量* 直接设置，`clgen` 会自动读取。
+- **.env 文件**: `clgen` 会在以下两个位置查找环境变量：
+    1. `%USERPROFILE%\.clgen\.env`: **全局配置** (推荐，跨项目通用)。
+    2. `./.env`: **项目局部配置** (会覆盖全局设置)。
+
+---
+
+## ⌨️ 命令行参考
+
+| 参数 | 描述 | 默认值 |
+|------|-------------|---------|
+| `REVISION_RANGE` | Git 范围 (例如 `v1.0.0..HEAD`) | 自动检测 |
+| `-a, --audience` | 受众: `user`, `developer`, `summary`, 或 `all` | `all` |
+| `-o, --output` | 输出文件路径 | `CHANGELOG.md` |
+| `--append` | 是否追加到现有文件顶部 | `True` |
+| `--no-append` | 是否直接覆盖现有文件 | `False` |
+| `--dry-run` | 仅打印到终端，不写入文件 | `False` |
+| `-m, --model` | LLM 模型标识符 | 自动检测 |
+
+---
+
+## 📄 许可证
 
 MIT

@@ -28,9 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourname/clgen"
-Repository = "https://github.com/yourname/clgen"
-Issues = "https://github.com/yourname/clgen/issues"
+Homepage = "https://github.com/cmxx648/clgen"
+Repository = "https://github.com/cmxx648/clgen"
+Issues = "https://github.com/cmxx648/clgen/issues"
 
 [project.scripts]
 clgen = "clgen.cli:app"

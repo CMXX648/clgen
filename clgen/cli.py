@@ -3,13 +3,32 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import Path
 
 import typer
 from rich.console import Console
 
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def _load_env_files() -> None:
+    """Load .env files from multiple locations (later entries don't override earlier).
+
+    Search order:
+    1. ~/.clgen/.env  (global user config)
+    2. ./.env         (project-local config)
+    """
+    home_env = Path.home() / ".clgen" / ".env"
+    local_env = Path.cwd() / ".env"
+
+    # Load global first, then local (local values take precedence via override=False)
+    if home_env.exists():
+        load_dotenv(home_env, override=False)
+    if local_env.exists():
+        load_dotenv(local_env, override=False)
+
+
+_load_env_files()
 
 from clgen import __version__
 from clgen.analyzer import analyze_commits, detect_model
@@ -59,16 +78,16 @@ def main(
         "-a",
         help="Target audience: user, developer, summary, or all.",
     ),
-    output: str | None = typer.Option(
-        None,
+    output: str = typer.Option(
+        "CHANGELOG.md",
         "--output",
         "-o",
-        help="Output file path. If omitted with --append, writes to CHANGELOG.md.",
+        help="Output file path.",
     ),
     append: bool = typer.Option(
-        False,
-        "--append",
-        help="Prepend entry to CHANGELOG.md (preserves existing content).",
+        True,
+        "--append/--no-append",
+        help="Prepend entry to output file, preserving existing content.",
     ),
     dry_run: bool = typer.Option(
         False,
@@ -139,13 +158,11 @@ def main(
     if dry_run:
         render_to_stdout(changelog, audience.value)
     elif append:
-        append_to_changelog(changelog, "CHANGELOG.md")
-        console.print("[bold green]Changelog prepended to CHANGELOG.md[/]")
-    elif output:
+        append_to_changelog(changelog, output)
+        console.print(f"[bold green]Changelog prepended to {output}[/]")
+    else:
         render_to_file(changelog, output, audience.value)
         console.print(f"[bold green]Changelog written to {output}[/]")
-    else:
-        render_to_stdout(changelog, audience.value)
 
 
 if __name__ == "__main__":
